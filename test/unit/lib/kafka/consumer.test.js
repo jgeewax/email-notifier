@@ -41,7 +41,7 @@ const KafkaConsumer = require('@mojaloop/central-services-stream').Kafka.Consume
 
 // TODO: Make this a relative import based on your path (not a bunch of ..'s)
 const src = '../../../../src'
-const Consumer = require(`${src}/lib/kafka/consumer`).Consumer
+const Consumer = require(`${src}/lib/kafka/consumer`)
 
 describe('Consumer', () => {
   let sandbox
