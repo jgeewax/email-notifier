@@ -190,7 +190,7 @@ Test('Consumer', ConsumerTest => {
 
       // Act
       await ConsumerProxy.createHandler(topicName, config)
-      const result = ConsumerProxy.__get__('listOfConsumers')
+      const result = ConsumerProxy.__get__('topicConsumerMap')
       const timestamps = Object.keys(result).map(k => result[k].connectedTimeStamp)
 
       // Assert
@@ -207,7 +207,7 @@ Test('Consumer', ConsumerTest => {
 
       // Act
       await ConsumerProxy.createHandler(topicName, config)
-      const result = ConsumerProxy.__get__('listOfConsumers')
+      const result = ConsumerProxy.__get__('topicConsumerMap')
       const timestamps = Object.keys(result).map(k => result[k].connectedTimeStamp)
 
       // Assert
@@ -222,7 +222,7 @@ Test('Consumer', ConsumerTest => {
     getListOfTopicsTest.test('return an empty array when there are no topics', test => {
       // Arrange
       const ConsumerProxy = rewire(`${src}/lib/kafka/consumer`)
-      ConsumerProxy.__set__('listOfConsumers', {})
+      ConsumerProxy.__set__('topicConsumerMap', {})
       const expected = []
 
       // Act
@@ -236,7 +236,7 @@ Test('Consumer', ConsumerTest => {
     getListOfTopicsTest.test('return a list of topics', test => {
       // Arrange
       const ConsumerProxy = rewire(`${src}/lib/kafka/consumer`)
-      ConsumerProxy.__set__('listOfConsumers', { admin1: {}, admin2: {} })
+      ConsumerProxy.__set__('topicConsumerMap', { admin1: {}, admin2: {} })
       const expected = ['admin1', 'admin2']
 
       // Act
@@ -256,7 +256,7 @@ Test('Consumer', ConsumerTest => {
 
     getConsumerTest.test('return list of consumers', async (test) => {
       const ConsumerProxy = rewire(`${src}/lib/kafka/consumer`)
-      ConsumerProxy.__set__('listOfConsumers', {
+      ConsumerProxy.__set__('topicConsumerMap', {
         admin: {
           consumer: expected
         }

@@ -32,7 +32,7 @@ const Consumer = require('@mojaloop/central-services-stream').Kafka.Consumer
 const Logger = require('@mojaloop/central-services-shared').Logger
 const Utility = require('../utility')
 const ErrorHandler = require('@mojaloop/central-services-error-handling')
-const listOfConsumers = {}
+const topicConsumerMap = {}
 
 /**
  * @function isConsumerAutoCommitEnabled
@@ -45,8 +45,8 @@ const listOfConsumers = {}
  * @throws {Error} - if consumer not found for topic name
  */
 const isConsumerAutoCommitEnabled = (topicName) => {
-  if (listOfConsumers[topicName]) {
-    return listOfConsumers[topicName].autoCommitEnabled
+  if (topicConsumerMap[topicName]) {
+    return topicConsumerMap[topicName].autoCommitEnabled
   } else {
     throw ErrorHandler.Factory.createInternalServerFSPIOPError(`No consumer found for topic ${topicName}`)
   }
@@ -59,7 +59,7 @@ const isConsumerAutoCommitEnabled = (topicName) => {
  * @param {object} config - the config for the consumer for the specific functionality and action, retrieved from the default.json. Example: found in default.json 'KAFKA.CONSUMER.TRANSFER.PREPARE'
  * @param {function} command - the callback handler for the topic. Will be called when the topic is produced against. Example: Command.prepareHandler()
  *
- * @description Creates handlers for the given topic name(s), and adds to listOfConsumers
+ * @description Creates handlers for the given topic name(s), and adds to topicConsumerMap
  */
 const createHandler = async (topicName, config, command) => {
   let topicNameArray
@@ -90,7 +90,7 @@ const createHandler = async (topicName, config, command) => {
   }
 
   topicNameArray.forEach(topicName => {
-    listOfConsumers[topicName] = {
+    topicConsumerMap[topicName] = {
       consumer,
       autoCommitEnabled,
       connectedTimeStamp
@@ -109,8 +109,8 @@ const createHandler = async (topicName, config, command) => {
  * @throws {Error} - if consumer not found for topic name
  */
 const getConsumer = (topicName) => {
-  if (listOfConsumers[topicName]) {
-    return listOfConsumers[topicName].consumer
+  if (topicConsumerMap[topicName]) {
+    return topicConsumerMap[topicName].consumer
   } else {
     throw ErrorHandler.Factory.createInternalServerFSPIOPError(`No consumer found for topic ${topicName}`)
   }
@@ -149,7 +149,7 @@ const registerNotificationHandler = async () => {
  * @returns {Array<string>} - list of topics
  */
 const getListOfTopics = () => {
-  return Object.keys(listOfConsumers)
+  return Object.keys(topicConsumerMap)
 }
 
 const getMetadataPromise = (consumer, topic) => {
