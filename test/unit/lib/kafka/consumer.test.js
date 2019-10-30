@@ -181,8 +181,8 @@ Test('Consumer', ConsumerTest => {
       KafkaConsumer.prototype.connect.throws(new Error())
 
       await Consumer.createHandler(topicNames, config)
-      for (let topicName of topicNames) {
-        let metadata = Consumer.getConsumerMetadata(topicName)
+      for (const topicName of topicNames) {
+        const metadata = Consumer.getConsumerMetadata(topicName)
         test.equal(metadata.connectedTimeStamp, 0, 'Timestamps should be 0')
       }
 

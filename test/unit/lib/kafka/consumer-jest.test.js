@@ -34,9 +34,9 @@ optionally within square brackets <email>.
  ******/
 'use strict'
 
-//const Test = require('tapes')(require('tape'))
+// const Test = require('tapes')(require('tape'))
 const sinon = require('sinon')
-//const rewire = require('rewire')
+// const rewire = require('rewire')
 const KafkaConsumer = require('@mojaloop/central-services-stream').Kafka.Consumer
 
 // TODO: Make this a relative import based on your path (not a bunch of ..'s)
@@ -44,7 +44,6 @@ const src = '../../../../src'
 const Consumer = require(`${src}/lib/kafka/consumer`).Consumer
 
 describe('Consumer', () => {
-
   let sandbox
 
   beforeEach(() => {
@@ -64,7 +63,6 @@ describe('Consumer', () => {
   })
 
   describe('Consumer Metadata', () => {
-
     describe('getConsumerMetadata', () => {
       it('should throw an error if no topic specified', () => {
         expect(() => {
@@ -167,7 +165,7 @@ describe('Consumer', () => {
         const metadata = {
           consumer: null
         }
-        const stub = sandbox.stub(metadata, 'consumer').get(spy)
+        sandbox.stub(metadata, 'consumer').get(spy)
         Consumer.setConsumerMetadata(topicName, metadata)
         expect(spy.called).toBe(false)
         Consumer.getKafkaConsumer(topicName)
@@ -180,7 +178,7 @@ describe('Consumer', () => {
         const topicName = 'topic-name'
         const stub = sandbox.stub(Consumer, 'getKafkaConsumer')
         expect(stub.called).toBe(false)
-          Consumer.getConsumer(topicName)
+        Consumer.getConsumer(topicName)
         expect(stub.called).toBe(true)
       })
     })
@@ -211,7 +209,7 @@ describe('Consumer', () => {
         const metadata = {
           autoCommitEnabled: null
         }
-        const stub = sandbox.stub(metadata, 'autoCommitEnabled').get(spy)
+        sandbox.stub(metadata, 'autoCommitEnabled').get(spy)
         Consumer.setConsumerMetadata(topicName, metadata)
         expect(spy.called).toBe(false)
         Consumer.isConsumerAutoCommitEnabled(topicName)
@@ -270,10 +268,48 @@ describe('Consumer', () => {
     it('should have a non-zero connect timestamp if successful', async () => {
       const topicNames = ['topic1', 'topic2']
       await Consumer.createHandler(topicNames, {})
-      for (let topicName of topicNames) {
+      for (const topicName of topicNames) {
         const metadata = Consumer.getConsumerMetadata(topicName)
         expect(metadata.connectedTimeStamp).not.toEqual(0)
       }
+    })
+  })
+
+  describe('registerNotificationHandler', () => {
+    it('should throw an error if the consumer fails to connect', () => {
+      KafkaConsumer.prototype.constructor.throws()
+      KafkaConsumer.prototype.connect.throws()
+      KafkaConsumer.prototype.getMetadata.throws()
+      expect(Consumer.registerNotificationHandler()).rejects.toThrow()
+    })
+
+    it('should work if connected', () => {
+      sandbox.stub(Consumer, 'isConnected').resolves(true)
+      expect(Consumer.registerNotificationHandler()).resolves.toBe(true)
+    })
+  })
+
+  describe('isConnected', () => {
+    it('should return true if connected', async () => {
+      const topicName = 'topic-name'
+      const config = {}
+      const metadata = {}
+      sandbox.stub(Consumer, 'getConsumer').returns({
+        getMetadata: sandbox.stub().callsArgWith(1, null, metadata)
+      })
+      await Consumer.createHandler(topicName, config)
+      expect(Consumer.isConnected(topicName)).resolves.toBe(true)
+    })
+
+    it('should throw if the topic is invalid', () => {
+      expect(Consumer.isConnected('invalid-topic')).rejects.toThrow()
+    })
+
+    it('should throw if not connected', async () => {
+      const topicName = 'topic-name'
+      const config = {}
+      await Consumer.createHandler(topicName, config)
+      expect(Consumer.isConnected(topicName)).rejects.toThrow()
     })
   })
 
@@ -283,12 +319,11 @@ describe('Consumer', () => {
     })
 
     it('should return the list of topics', () => {
-      expect(Consumer.getListOfTopics()).toHaveLength(0)
+      expect(Consumer.getListOfTopics()).toEqual([])
       Consumer.setConsumerMetadata('topic1', {})
       expect(Consumer.getListOfTopics()).toEqual(['topic1'])
       Consumer.setConsumerMetadata('topic2', {})
       expect(Consumer.getListOfTopics()).toEqual(['topic1', 'topic2'])
     })
   })
-
 })

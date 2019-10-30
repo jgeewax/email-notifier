@@ -36,17 +36,14 @@ const Logger = require('@mojaloop/central-services-shared').Logger
 const Utility = require('../utility')
 const ErrorHandler = require('@mojaloop/central-services-error-handling')
 
-
 let _topicConsumerMetadata = {}
 
-
 class Consumer {
-
-  static get _topicConsumerMetadata() {
+  static get _topicConsumerMetadata () {
     return _topicConsumerMetadata
   }
 
-  static set _topicConsumerMetadata(value) {
+  static set _topicConsumerMetadata (value) {
     _topicConsumerMetadata = value
   }
 
@@ -87,20 +84,61 @@ class Consumer {
     }
   }
 
+  /**
+   * @function getListOfTopics
+   *
+   * @description Get a list of topics that the consumer has subscribed to
+   *
+   * @returns {Array<string>} - list of topics
+   */
   static getListOfTopics () {
     return Object.keys(this._topicConsumerMetadata)
   }
 
+  /**
+   * @function getKafkaConsumer
+   *
+   * @param {string} topicName - the topic name to locate a specific consumer
+   *
+   * @description This is used to get a consumer with the topic name to commit
+   *              the messages that have been received
+   *
+   * @returns {Consumer} - Returns consumer
+   * @throws {Error} - if consumer not found for topic name
+   */
   static getKafkaConsumer (topicName) {
     const metadata = this.getConsumerMetadata(topicName)
     return metadata.consumer
   }
 
+  /**
+   * @function getConsumer
+   *
+   * @param {string} topicName - the topic name to locate a specific consumer
+   *
+   * @description This is used to get a consumer with the topic name to commit
+   *              the messages that have been received
+   *
+   * @returns {Consumer} - Returns consumer
+   * @throws {Error} - if consumer not found for topic name
+   */
   static getConsumer (topicName) {
     // This is just here for legacy reasons
     return this.getKafkaConsumer(topicName)
   }
 
+  /**
+   * @function isConsumerAutoCommitEnabled
+   *
+   * @param {string} topicName - the topic name to locate a specific consumer
+   *
+   * @description This is used to get a consumer with the topic name to commit
+   *              the messages that have been received
+   *
+   * @returns {Boolean} - Returns whether or not AutoCommit is enabled for this
+   *                      consumer
+   * @throws {Error} - if consumer not found for topic name
+   */
   static isConsumerAutoCommitEnabled (topicName) {
     const metadata = this.getConsumerMetadata(topicName)
     return metadata.autoCommitEnabled
@@ -114,6 +152,22 @@ class Consumer {
     }
   }
 
+  /**
+   * @function CreateHandler
+   *
+   * @param {string | Array<string>} topicName - the topic name or names to be
+   *        registered for the required handler.
+   *        Example: 'topic-dfsp1-transfer-prepare'
+   * @param {object} config - the config for the consumer for the specific
+   *        functionality and action, retrieved from the default.json.
+   *        Example: found in default.json 'KAFKA.CONSUMER.TRANSFER.PREPARE'
+   * @param {function} command - the callback handler for the topic. Will be
+   *        called when the topic is produced against.
+   *        Example: Command.prepareHandler()
+   *
+   * @description Creates handlers for the given topic name(s), and adds to
+   *              topicConsumerMap
+   */
   static async createHandler (topicName, config, command) {
     const topicNameArray = this._coerceToArray(topicName)
 
@@ -156,6 +210,15 @@ class Consumer {
     })
   }
 
+  /**
+   * @function registerNotificationHandler
+   *
+   * @description This is used to register the handler for the Notification topic
+   *              according to a specified Kafka congfiguration
+   *
+   * @returns true
+   * @throws {Error} - if handler failed to create
+   */
   static async registerNotificationHandler () {
     // Create a topic name.
     const topicName = Utility.transformGeneralTopicName(
@@ -198,7 +261,8 @@ class Consumer {
     // This "module.exports" thing is important for mocking in the tests.
     // TODO: Rearrange this file so that we don't need to do this.
     const consumer = this.getConsumer(topicName)
-    const metadata = await util.promisify(consumer.getMetadata)({
+    const getMetadata = util.promisify(consumer.getMetadata)
+    const metadata = await getMetadata({
       topicName,
       timeout: 3000
     })
@@ -213,224 +277,4 @@ class Consumer {
   }
 }
 
-const topicConsumerMap = {}
-
-/**
- * @function getConsumerMetadata
- *
- * @param {string} topicName - the topic name to locate a specific consumer
- *
- * @description This is used to retrieve a consumer for a given topic name
- *
- * @returns {Consumer} - Returns the registered consumer for a given topic name
- * @throws {Error} - if no consumer is found for a topic name
- */
-const getConsumerMetadata = (topicName) => {
-  if (topicName in topicConsumerMap) {
-    return topicConsumerMap[topicName]
-  }
-  // If the topicName doesn't exist in the map, throw an error.
-  throw ErrorHandler.Factory.createInternalServerFSPIOPError(
-    `No consumer found for topic ${topicName}`)
-}
-
-/**
- * @function getConsumer
- *
- * @param {string} topicName - the topic name to locate a specific consumer
- *
- * @description This is used to get a consumer with the topic name to commit
- *              the messages that have been received
- *
- * @returns {Consumer} - Returns consumer
- * @throws {Error} - if consumer not found for topic name
- */
-const getConsumer = (topicName) => {
-  const consumerMetadata = getConsumerMetadata(topicName)
-  return consumerMetadata.consumer
-}
-
-/**
- * @function isConsumerAutoCommitEnabled
- *
- * @param {string} topicName - the topic name to locate a specific consumer
- *
- * @description This is used to get a consumer with the topic name to commit
- *              the messages that have been received
- *
- * @returns {Boolean} - Returns whether or not AutoCommit is enabled for this
- *                      consumer
- * @throws {Error} - if consumer not found for topic name
- */
-const isConsumerAutoCommitEnabled = (topicName) => {
-  const consumer = getConsumerMetadata(topicName)
-  return consumer.autoCommitEnabled
-}
-
-/**
- * @function CreateHandler
- *
- * @param {string | Array<string>} topicName - the topic name or names to be
- *        registered for the required handler.
- *        Example: 'topic-dfsp1-transfer-prepare'
- * @param {object} config - the config for the consumer for the specific
- *        functionality and action, retrieved from the default.json.
- *        Example: found in default.json 'KAFKA.CONSUMER.TRANSFER.PREPARE'
- * @param {function} command - the callback handler for the topic. Will be
- *        called when the topic is produced against.
- *        Example: Command.prepareHandler()
- *
- * @description Creates handlers for the given topic name(s), and adds to
- *              topicConsumerMap
- */
-const createHandler = async (topicName, config, command) => {
-  // Always coerce a single name to an array the name.
-  let topicNameArray
-  if (Array.isArray(topicName)) {
-    topicNameArray = topicName
-  } else {
-    topicNameArray = [topicName]
-  }
-
-  // Always log that we're trying to create a consumer for specific topics.
-  Logger.info(`CreateHandle::connect - creating Consumer for topics: ` +
-              `[${topicNameArray}]`)
-
-  // Create a new consumer.
-  const consumer = new KafkaConsumer(topicNameArray, config)
-
-  // Figure out whether auto-commit is enabled and keep track of that.
-  let autoCommitEnabled = true
-  if (config.rdkafkaConf !== undefined &&
-      config.rdkafkaConf['enable.auto.commit'] !== undefined) {
-    autoCommitEnabled = config.rdkafkaConf['enable.auto.commit']
-  }
-
-  // Try to establish the connection.
-  // TODO: This should be connectedTimestamp (not TimeStamp).
-  let connectedTimeStamp = 0
-  try {
-    await consumer.connect()
-    Logger.info(`CreateHandle::connect - successfully connected to topics: ` +
-                `[${topicName}]`)
-    connectedTimeStamp = (new Date()).valueOf()
-    await consumer.consume(command)
-  } catch (e) {
-    // Don't throw the error, keep track of the topic we tried to connect to
-    Logger.warn(`CreateHandle::connect - error: ${e.message}`)
-  }
-
-  // Once the connection is established (maybe), store the consumer information
-  // and other metadata in topicConsumerMap.
-  topicNameArray.forEach(topicName => {
-    topicConsumerMap[topicName] = {
-      consumer,
-      autoCommitEnabled,
-      connectedTimeStamp
-    }
-  })
-}
-
-/**
- * @function registerNotificationHandler
- *
- * @description This is used to register the handler for the Notification topic
- *              according to a specified Kafka congfiguration
- *
- * @returns true
- * @throws {Error} - if handler failed to create
- */
-const registerNotificationHandler = async () => {
-  // Create a topic name..
-  const topicName = Utility.transformGeneralTopicName(
-    Utility.ENUMS.NOTIFICATION,
-    Utility.ENUMS.EVENT)
-
-  // Create the Kafka config.
-  const config = Utility.getKafkaConfig(
-    Utility.ENUMS.CONSUMER,
-    Utility.ENUMS.NOTIFICATION.toUpperCase(),
-    Utility.ENUMS.EVENT.toUpperCase())
-  config.rdkafkaConf['client.id'] = topicName
-
-  // Try to create the handler and wait to establish a connection. Then return
-  // true to indicate success.
-  try {
-    // Note "module.exports" is important for mocking in tests.
-    await module.exports.createHandler(topicName, config)
-    await module.exports.isConnected(topicName)
-    return true
-  } catch (err) {
-    // Log and throw a more specific error type.
-    Logger.error(err)
-    throw ErrorHandler.Factory.reformatFSPIOPError(err)
-  }
-}
-
-/**
- * @function getTopics
- *
- * @description Get a list of topics that the consumer has subscribed to
- *
- * @returns {Array<string>} - list of topics
- */
-const getTopics = () => {
-  return Object.keys(topicConsumerMap)
-}
-
-const getListOfTopics = getTopics
-
-// TODO: Remove this. Use util.promisify.
-const getMetadataPromise = (consumer, topic) => {
-  return new Promise((resolve, reject) => {
-    const cb = (err, metadata) => {
-      if (err) {
-        return reject(new Error('Error connecting to consumer'))
-      }
-
-      return resolve(metadata)
-    }
-    consumer.getMetadata({ topic, timeout: 3000 }, cb)
-  })
-}
-
-/**
- * @function isConnected
- *
- * @param {string} topicName - the topic name of the consumer to check
- *
- * @description Use this to determine whether or not we are connected to the
- *              broker. Internally, it calls `getMetadata` to determine
- * if the broker client is connected.
- *
- * @returns {true} - if connected
- * @throws {Error} - if consumer can't be found or the consumer isn't connected
- */
-const isConnected = async topicName => {
-  // This "module.exports" thing is important for mocking in the tests.
-  // TODO: Rearrange this file so that we don't need to do this.
-  const consumer = module.exports.getConsumer(topicName)
-  const metadata = await util.promisify(consumer.getMetadata)({
-    topicName,
-    timeout: 3000
-  })
-  const foundTopics = metadata.topics.map(topic => topic.name)
-  if (foundTopics.indexOf(topicName) === -1) {
-    Logger.debug(`Connected to consumer, but ${topicName} not found.`)
-    throw ErrorHandler.Factory.createInternalServerFSPIOPError(
-      `Connected to consumer, but ${topicName} not found.`)
-  }
-
-  return true
-}
-
-module.exports = {
-  createHandler,
-  getConsumer,
-  getListOfTopics,
-  isConsumerAutoCommitEnabled,
-  isConnected,
-  registerNotificationHandler,
-  getConsumerMetadata,
-  Consumer
-}
+module.exports = Consumer
