@@ -1,7 +1,5 @@
 'use strict'
 
-const Sinon = require('sinon')
-const Test = require('tapes')(require('tape'))
 const Uuid = require('uuid4')
 const Utility = require('../../../src/lib/utility')
 
@@ -62,7 +60,6 @@ const messageProtocol = {
 }
 
 describe('Utility', () => {
-
   describe('updateMessageProtocolMetadata', () => {
     it('should return an updated metadata object in the message protocol', () => {
       const previousEventId = messageProtocol.metadata.event.id
