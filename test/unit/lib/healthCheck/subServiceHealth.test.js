@@ -13,98 +13,53 @@ const {
 
 const mailer = Mailer.sharedInstance()
 
-Test('SubServiceHealth test', function (subServiceHealthTest) {
+describe('SubServiceHealth test', () => {
   let sandbox
 
-  subServiceHealthTest.beforeEach(t => {
+  beforeEach(() => {
     sandbox = Sinon.createSandbox()
     sandbox.stub(Consumer, 'getListOfTopics')
     sandbox.stub(Consumer, 'isConnected')
     sandbox.stub(mailer.transporter, 'verify')
-
-    t.end()
   })
 
-  subServiceHealthTest.afterEach(t => {
+  afterEach(() => {
     sandbox.restore()
-
-    t.end()
   })
 
-  subServiceHealthTest.test('getSubServiceHealthSMTP', smtpTest => {
-    smtpTest.test('passes when transporter.verify() suceeds', async test => {
-      // Arrange
+  describe('getSubServiceHealthSMTP', () => {
+    it('should pass when transporter.verify() suceeds', async () => {
       mailer.transporter.verify.resolves()
       const expected = { name: serviceName.smtpServer, status: statusEnum.OK }
-
-      // Act
-      const result = await getSubServiceHealthSMTP()
-
-      // Assert
-      test.deepEqual(result, expected, 'getSubServiceHealthSMTP should match expected result')
-      test.end()
+      expect(getSubServiceHealthSMTP()).resolves.toEqual(expected)
     })
 
-    smtpTest.test('fails when transporter.verify() fails', async test => {
-      // Arrange
+    it('should fail when transporter.verify() fails', async () => {
       mailer.transporter.verify.throws(new Error('Authentication failed'))
       const expected = { name: serviceName.smtpServer, status: statusEnum.DOWN }
-
-      // Act
-      const result = await getSubServiceHealthSMTP()
-
-      // Assert
-      test.deepEqual(result, expected, 'getSubServiceHealthSMTP should match expected result')
-      test.end()
+      expect(getSubServiceHealthSMTP()).resolves.toEqual(expected)
     })
-
-    smtpTest.end()
   })
 
-  subServiceHealthTest.test('getSubServiceHealthBroker', brokerTest => {
-    brokerTest.test('broker test passes when there are no topics', async test => {
-      // Arrange
+  describe('getSubServiceHealthBroker', () => {
+    it('should broker test passes when there are no topics', async () => {
       Consumer.getListOfTopics.returns([])
       const expected = { name: serviceName.broker, status: statusEnum.OK }
-
-      // Act
-      const result = await getSubServiceHealthBroker()
-
-      // Assert
-      test.deepEqual(result, expected, 'getSubServiceHealthBroker should match expected result')
-      test.end()
+      expect(getSubServiceHealthBroker()).resolves.toEqual(expected)
     })
 
-    brokerTest.test('broker test fails when one broker cannot connect', async test => {
-      // Arrange
+    it('broker test fails when one broker cannot connect', async () => {
       Consumer.getListOfTopics.returns(['admin1', 'admin2'])
       Consumer.isConnected.throws(new Error('Not connected!'))
       const expected = { name: serviceName.broker, status: statusEnum.DOWN }
-
-      // Act
-      const result = await getSubServiceHealthBroker()
-
-      // Assert
-      test.deepEqual(result, expected, 'getSubServiceHealthBroker should match expected result')
-      test.end()
+      expect(getSubServiceHealthBroker()).resolves.toEqual(expected)
     })
 
-    brokerTest.test('Passes when it connects', async test => {
-      // Arrange
+    it('Passes when it connects', async () => {
       Consumer.getListOfTopics.returns(['admin1', 'admin2'])
-      Consumer.isConnected.returns(Promise.resolve(true))
+      Consumer.isConnected.resolves(true)
       const expected = { name: serviceName.broker, status: statusEnum.OK }
-
-      // Act
-      const result = await getSubServiceHealthBroker()
-
-      // Assert
-      test.deepEqual(result, expected, 'getSubServiceHealthBroker should match expected result')
-      test.end()
+      expect(getSubServiceHealthBroker()).resolves.toEqual(expected)
     })
-
-    brokerTest.end()
   })
-
-  subServiceHealthTest.end()
 })
