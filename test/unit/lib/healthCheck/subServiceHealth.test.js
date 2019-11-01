@@ -1,8 +1,10 @@
 'use strict'
 
-const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-const { statusEnum, serviceName } = require('@mojaloop/central-services-shared').HealthCheck.HealthCheckEnums
+const {
+  statusEnum,
+  serviceName
+} = require('@mojaloop/central-services-shared').HealthCheck.HealthCheckEnums
 
 const Mailer = require('../../../../src/nodeMailer/sendMail')
 const Consumer = require('../../../../src/lib/kafka/consumer')
