@@ -116,7 +116,6 @@ describe('Producer', () => {
     sandbox.restore()
   })
 
-
   describe('produceMessage', () => {
     it('should return true', async () => {
       expect(Producer.produceMessage(messageProtocol, topicConf, config))
@@ -145,7 +144,7 @@ describe('Producer', () => {
       const topicNames = ['topic1', 'topic2', 'topic3']
       // Register two producers lazily by producing two messages (one for each
       // topic).
-      for (let topicName of topicNames) {
+      for (const topicName of topicNames) {
         await Producer.produceMessage(messageProtocol, { topicName }, config)
       }
 
@@ -154,7 +153,7 @@ describe('Producer', () => {
 
       // Finally, verify that each producer.disconnect() method was called.
       // NOTE: These were mocked in the beforeEach() method.
-      for (let producer of topicNames.map((t) => Producer.getProducer(t))) {
+      for (const producer of topicNames.map((t) => Producer.getProducer(t))) {
         expect(producer.disconnect.called).toBe(true)
       }
     })
@@ -205,7 +204,6 @@ describe('Producer', () => {
     })
 
     it('should throw error if any topics fail to disconnect', async () => {
-      return
       const topicNameSuccess = 'topic1'
       const topicNameFailure = 'topic-fail'
 

@@ -2,24 +2,14 @@
 
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
-// const P = require('bluebird')
 const Uuid = require('uuid4')
-// const Logger = require('@mojaloop/central-services-shared').Logger
-// const KafkaProducer = require('@mojaloop/central-services-stream').Kafka.Producer
-// const Proxyquire = require('proxyquire')
 const Utility = require('../../../src/lib/utility')
 
-// let participantName
 const TRANSFER = 'transfer'
 const PREPARE = 'prepare'
-// const FULFIL = 'fulfil'
 const NOTIFICATION = 'notification'
 const EVENT = 'event'
-// const COMMIT = 'commit'
 const CONSUMER = 'CONSUMER'
-
-// const participantTopic = 'topic-testParticipant-transfer-prepare'
-// const generalTopic = 'topic-transfer-fulfil'
 
 const transfer = {
   transferId: 'b51ec534-ee48-4575-b6a9-ead2955b8999',
@@ -71,82 +61,54 @@ const messageProtocol = {
   pp: ''
 }
 
-Test('Utility Test', utilityTest => {
-  let sandbox
+describe('Utility', () => {
 
-  utilityTest.beforeEach(test => {
-    sandbox = Sinon.createSandbox()
-    // sandbox.stub(KafkaProducer.prototype, 'constructor').returns(P.resolve())
-    // sandbox.stub(KafkaProducer.prototype, 'connect').returns(P.resolve())
-    // sandbox.stub(KafkaProducer.prototype, 'sendMessage').returns(P.resolve())
-    // sandbox.stub(KafkaProducer.prototype, 'disconnect').returns(P.resolve())
-    // participantName = 'testParticipant'
-    test.end()
-  })
-
-  utilityTest.afterEach(test => {
-    sandbox.restore()
-    test.end()
-  })
-
-  utilityTest.test('updateMessageProtocolMetadata should', updateMessageProtocolMetadataTest => {
-    updateMessageProtocolMetadataTest.test('return an updated metadata object in the message protocol', test => {
+  describe('updateMessageProtocolMetadata', () => {
+    it('should return an updated metadata object in the message protocol', () => {
       const previousEventId = messageProtocol.metadata.event.id
-      const newMessageProtocol = Utility.updateMessageProtocolMetadata(messageProtocol, TRANSFER, PREPARE, Utility.ENUMS.STATE.SUCCESS)
-      test.equal(newMessageProtocol.metadata.event.state, Utility.ENUMS.STATE.SUCCESS)
-      test.equal(newMessageProtocol.metadata.event.type, TRANSFER)
-      test.equal(newMessageProtocol.metadata.event.action, PREPARE)
-      test.equal(newMessageProtocol.metadata.event.responseTo, previousEventId)
-      test.end()
+      const newMessageProtocol = Utility.updateMessageProtocolMetadata(
+        messageProtocol, TRANSFER, PREPARE, Utility.ENUMS.STATE.SUCCESS)
+      const eventData = newMessageProtocol.metadata.event
+      expect(eventData.state).toEqual(Utility.ENUMS.STATE.SUCCESS)
+      expect(eventData.type).toEqual(TRANSFER)
+      expect(eventData.action).toEqual(PREPARE)
+      expect(eventData.responseTo).toEqual(previousEventId)
     })
 
-    updateMessageProtocolMetadataTest.test('return an updated metadata object in the message protocol if metadata is not present', test => {
-      const newMessageProtocol = Utility.updateMessageProtocolMetadata({}, TRANSFER, PREPARE, Utility.ENUMS.STATE.SUCCESS)
-      test.equal(newMessageProtocol.metadata.event.state, Utility.ENUMS.STATE.SUCCESS)
-      test.equal(newMessageProtocol.metadata.event.type, TRANSFER)
-      test.equal(newMessageProtocol.metadata.event.action, PREPARE)
-      test.end()
+    it('should return an updated metadata object in the message protocol if metadata is not present', () => {
+      const newMessageProtocol = Utility.updateMessageProtocolMetadata(
+        {}, TRANSFER, PREPARE, Utility.ENUMS.STATE.SUCCESS)
+      const eventData = newMessageProtocol.metadata.event
+      expect(eventData.state).toEqual(Utility.ENUMS.STATE.SUCCESS)
+      expect(eventData.type).toEqual(TRANSFER)
+      expect(eventData.action).toEqual(PREPARE)
     })
-
-    updateMessageProtocolMetadataTest.end()
   })
 
-  utilityTest.test('getKafkaConfig should', getKafkaConfigTest => {
-    getKafkaConfigTest.test('return the Kafka config from the default.json', test => {
-      const config = Utility.getKafkaConfig(CONSUMER, NOTIFICATION.toUpperCase(), EVENT.toUpperCase())
-      test.ok(config.rdkafkaConf !== undefined)
-      test.ok(config.options !== undefined)
-      test.end()
+  describe('getKafkaConfig', () => {
+    it('should return the Kafka config from the default.json', () => {
+      const config = Utility.getKafkaConfig(
+        CONSUMER, NOTIFICATION.toUpperCase(), EVENT.toUpperCase())
+      expect(config.rdkafkaConf).not.toBe(undefined)
+      expect(config.options).not.toBe(undefined)
     })
 
-    getKafkaConfigTest.test('throw and error if Kafka config not in default.json', test => {
-      try {
+    it('should throw and error if Kafka config not in default.json', () => {
+      expect(() => {
         Utility.getKafkaConfig(CONSUMER, NOTIFICATION, EVENT)
-        test.fail('Error not thrown')
-        test.end()
-      } catch (e) {
-        test.pass('Error thrown')
-        test.end()
-      }
+      }).toThrow()
     })
-
-    getKafkaConfigTest.end()
   })
 
-  utilityTest.test('createState should', createStateTest => {
-    createStateTest.test('create a state', async (test) => {
+  describe('createState should', () => {
+    it('should create a state', () => {
       const state = {
         status: 'status',
         code: 1,
         description: 'description'
       }
-      const result = await Utility.createState(state.status, state.code, state.description)
-      test.deepEqual(result, state)
-      test.end()
+      expect(Utility.createState(state.status, state.code, state.description))
+        .toEqual(state)
     })
-
-    createStateTest.end()
   })
-
-  utilityTest.end()
 })
