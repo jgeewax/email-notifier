@@ -3,7 +3,7 @@ const Test = require('tapes')(require('tape'))
 const Proxyquire = require('proxyquire')
 const Config = require('../../src/lib/config')
 
-Test('Setup test', async setupTest => {
+describe('Setup', () => {
   let sandbox,
     setupProxy,
     subStub,
@@ -18,106 +18,91 @@ Test('Setup test', async setupTest => {
     HealthCheckConstructorStub
 
   const topicName = 'test-topic'
-  setupTest.beforeEach(t => {
-    try {
-      sandbox = Sinon.createSandbox()
+  beforeEach(t => {
+    sandbox = Sinon.createSandbox()
 
-      conStub = {
-        commitMessageSync: sandbox.stub().returns(async function () { return true }),
-        consume: sandbox.stub().resolves(),
-        _status: { running: true }
+    conStub = {
+      commitMessageSync: sandbox.stub().returns(async function () { return true }),
+      consume: sandbox.stub().resolves(),
+      _status: { running: true }
+    }
+
+    subStub = {
+      subscribe: sandbox.stub().returns(true)
+    }
+
+    pipeStub = {
+      pipe: sandbox.stub().returns(subStub)
+    }
+
+    RxStub = {
+      Observable: {
+        create: sandbox.stub().returns(pipeStub)
       }
+    }
 
-      subStub = {
-        subscribe: sandbox.stub().returns(true)
+    operatorsStub = {
+      filter: sandbox.stub().returns(() => {}),
+      switchMap: sandbox.stub().returns(() => {})
+    }
+
+    ObservablesStub = {
+      actionObservable: sandbox.stub()
+    }
+
+    HealthCheckConstructorStub = sandbox.stub()
+    const mockHealthCheck = class HealthCheckStubbed {
+      constructor () {
+        HealthCheckConstructorStub()
       }
+    }
 
-      pipeStub = {
-        pipe: sandbox.stub().returns(subStub)
-      }
+    createHealthCheckServerStub = sandbox.stub().returns()
 
-      RxStub = {
-        Observable: {
-          create: sandbox.stub().returns(pipeStub)
-        }
-      }
+    UtilityStub = {
+      trantransformGeneralTopicName: sandbox.stub().returns(topicName)
+    }
 
-      operatorsStub = {
-        filter: sandbox.stub().returns(() => {}),
-        switchMap: sandbox.stub().returns(() => {})
-      }
+    ConsumerStub = {
+      registerNotificationHandler: sandbox.stub().resolves(),
+      isConsumerAutoCommitEnabled: sandbox.stub().returns(true),
+      getConsumer: sandbox.stub().returns(conStub)
+    }
 
-      ObservablesStub = {
-        actionObservable: sandbox.stub()
-      }
-
-      HealthCheckConstructorStub = sandbox.stub()
-      const mockHealthCheck = class HealthCheckStubbed {
-        constructor () {
-          HealthCheckConstructorStub()
-        }
-      }
-
-      createHealthCheckServerStub = sandbox.stub().returns()
-
-      UtilityStub = {
-        trantransformGeneralTopicName: sandbox.stub().returns(topicName)
-      }
-
-      ConsumerStub = {
-        registerNotificationHandler: sandbox.stub().resolves(),
-        isConsumerAutoCommitEnabled: sandbox.stub().returns(true),
-        getConsumer: sandbox.stub().returns(conStub)
-      }
-
-      setupProxy = Proxyquire('../../src/setup', {
-        rxjs: RxStub,
-        './observables': ObservablesStub,
-        '@mojaloop/central-services-health': {
-          createHealthCheckServer: createHealthCheckServerStub,
-          defaultHealthHandler: () => {}
-        },
-        '@mojaloop/central-services-shared': {
-          HealthCheck: {
-            HealthCheck: mockHealthCheck,
-            HealthCheckEnums: {
-              serviceName: {
-                broker: 'broker'
-              }
+    setupProxy = Proxyquire('../../src/setup', {
+      rxjs: RxStub,
+      './observables': ObservablesStub,
+      '@mojaloop/central-services-health': {
+        createHealthCheckServer: createHealthCheckServerStub,
+        defaultHealthHandler: () => {}
+      },
+      '@mojaloop/central-services-shared': {
+        HealthCheck: {
+          HealthCheck: mockHealthCheck,
+          HealthCheckEnums: {
+            serviceName: {
+              broker: 'broker'
             }
           }
-        },
-        'rxjs/operators': operatorsStub,
-        './lib/utility': UtilityStub,
-        './lib/kafka/consumer': ConsumerStub
-      })
-    } catch (e) {
-      console.error(e)
-    }
-    t.end()
+        }
+      },
+      'rxjs/operators': operatorsStub,
+      './lib/utility': UtilityStub,
+      './lib/kafka/consumer': ConsumerStub
+    })
   })
 
-  setupTest.afterEach(t => {
+  afterEach(() => {
     sandbox.restore()
-    t.end()
   })
 
-  await setupTest.test('setup should', async assert => {
-    try {
-      const result = await setupProxy.setup()
-      assert.ok(result, 'Notifier setup finished')
-      assert.ok(createHealthCheckServerStub.calledOnce, 'healthCheck initialized')
-      assert.ok(createHealthCheckServerStub.withArgs(Config.get('PORT'), (r, h) => {}))
-      assert.ok(HealthCheckConstructorStub.calledOnce, 'HealthCheck constructor called')
-
-      assert.ok(RxStub.Observable.create.calledOnce, 'Observable created')
-      assert.ok(operatorsStub.filter.calledOnce, 'Filter created')
-      assert.end()
-    } catch (e) {
-      console.error(e)
-      assert.end()
-    }
+  it('setup should', async () => {
+    expect(await setupProxy.setup()).toBe('Notifier setup finished')
+    expect(createHealthCheckServerStub.calledOnce).toBe(true)
+    //createHealthCheckServerStub.withArgs(Config.get('PORT'), (r, h) => {})
+    expect(HealthCheckConstructorStub.calledOnce).toBe(true)
+    expect(RxStub.Observable.create.calledOnce).toBe(true)
+    expect(operatorsStub.filter.calledOnce).toBe(true)
   })
 
-  setupTest.end()
 })
