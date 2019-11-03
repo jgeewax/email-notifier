@@ -135,9 +135,9 @@ describe('RxJs Observable Tests (Action Observable)', () => {
       actionObservable(mockMessage).subscribe(resolve, reject)
     })
     await expect(promise).resolves.toEqual({
-          dfspMailResult: true,
-          hubMailResult: true
-        })
+      dfspMailResult: true,
+      hubMailResult: true
+    })
   })
 
   it('should fail when sent mail message fails.', async () => {

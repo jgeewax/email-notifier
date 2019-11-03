@@ -46,12 +46,11 @@ const Logger = require('@mojaloop/central-services-shared').Logger
 let _listOfProducers = {}
 
 class _Producer {
-
-  static get listOfProducers() {
+  static get listOfProducers () {
     return _listOfProducers
   }
 
-  static set listOfProducers(value) {
+  static set listOfProducers (value) {
     _listOfProducers = {}
   }
 
@@ -112,7 +111,7 @@ class _Producer {
       await this.getProducer(topicName).disconnect()
     } else if (topicName === null) {
       let isError = false
-      let errorTopicList = []
+      const errorTopicList = []
 
       let tpName
       for (tpName in this.listOfProducers) {

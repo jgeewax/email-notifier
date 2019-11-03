@@ -1,7 +1,5 @@
 const Sinon = require('sinon')
-const Test = require('tapes')(require('tape'))
 const Proxyquire = require('proxyquire')
-const Config = require('../../src/lib/config')
 
 describe('Setup', () => {
   let sandbox,
@@ -18,7 +16,7 @@ describe('Setup', () => {
     HealthCheckConstructorStub
 
   const topicName = 'test-topic'
-  beforeEach(t => {
+  beforeEach(() => {
     sandbox = Sinon.createSandbox()
 
     conStub = {
@@ -99,10 +97,9 @@ describe('Setup', () => {
   it('setup should', async () => {
     expect(await setupProxy.setup()).toBe('Notifier setup finished')
     expect(createHealthCheckServerStub.calledOnce).toBe(true)
-    //createHealthCheckServerStub.withArgs(Config.get('PORT'), (r, h) => {})
+    // createHealthCheckServerStub.withArgs(Config.get('PORT'), (r, h) => {})
     expect(HealthCheckConstructorStub.calledOnce).toBe(true)
     expect(RxStub.Observable.create.calledOnce).toBe(true)
     expect(operatorsStub.filter.calledOnce).toBe(true)
   })
-
 })

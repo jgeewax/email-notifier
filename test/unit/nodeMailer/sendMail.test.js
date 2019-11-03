@@ -10,7 +10,7 @@
  are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  KIND, either express or implied. See the License for the specific language
  governing permissions and limitations under the License.
- 
+
  Contributors
  ------------
  This is the official list of the Mojaloop project contributors for this file.
@@ -31,7 +31,6 @@
 
 'use strict'
 
-const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Mailer = require('../../../src/nodeMailer/sendMail')
 const nodemailer = require('nodemailer')
@@ -124,7 +123,6 @@ describe('nodeMailer (sendMail.js) : ', () => {
   })
 
   describe('sendMailMessage', () => {
-
     it('should return success if sendMail works', async () => {
       nodemailer.createTransport.returns({
         sendMail: (data, callback) => {
