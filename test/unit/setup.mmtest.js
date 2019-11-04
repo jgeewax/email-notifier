@@ -4,10 +4,6 @@
 const marbles = require('rxjs-marbles/tape').marbles
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
-// const Setup = require('../../src/setup').setup
-// const Kafka = require('../../src/lib/kafka')
-// const KafkaConsumer = require('@mojaloop/central-services-stream').Kafka.Consumer
-// const Rx = require('rxjs')
 const { filter, switchMap } = require('rxjs/operators')
 const Mailer = require('../../src/nodeMailer/sendMail')
 const Config = require('../../src/lib/config')
@@ -17,7 +13,6 @@ const hubName = Config.get('HUB_PARTICIPANT').NAME
 
 Test('Test the action observables Setup', marbles((m, t) => {
   const sandbox = Sinon.createSandbox()
-  // start stubbing stuff
   sandbox.stub(Mailer.prototype, 'sendMailMessage')
   const emailer = new Mailer()
   emailer.sendMailMessage.resolves(true)
@@ -122,30 +117,4 @@ Test('Test the action observables Setup', marbles((m, t) => {
   m.expect(destination).toBeObservable(expected)
 
   t.end()
-})
-
-)
-
-// ?=> {
-// let sandbox
-// let ConsumerStub
-// let UtilityStub
-// let LoggerStub
-// let RxStub
-// let filterStub
-// let switchMapStub
-// let ObservablesStub
-// let healthcheckStub
-
-// setupTest.beforeEach(t => {
-//   sandbox = Sinon.createSandbox()
-//   sandbox.stub(KafkaConsumer.prototype, 'constructor').resolves()
-//   sandbox.stub(KafkaConsumer.prototype, 'connect').resolves()
-//   sandbox.stub(KafkaConsumer.prototype, 'consume').resolves()
-//   sandbox.stub(KafkaConsumer.prototype, 'commitMessageSync').resolves()
-//   sandbox.stub(Kafka.Consumer, 'getConsumer').returns({
-//     commitMessageSync: async function () { return true }
-//   })
-//   sandbox.stub(Rx.prototype, 'Observable')
-// })
-// })
+}))
